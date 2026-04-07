@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="32dp"
+    android:gravity="center">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Focus Blocker"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp" />
+    <TextView
+        android:id="@+id/text_view_balance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Wealth: 0 Credits"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#4CAF50"
+        android:layout_marginBottom="32dp" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chose app to block"
+        android:layout_marginBottom="8dp" />
+
+    <Spinner
+    android:id="@+id/spinner_app_selector"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="48dp"
+    android:layout_marginBottom="32dp"
+    android:background="@android:drawable/btn_dropdown" />
+
+    <Switch
+        android:id="@+id/switch_blocker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enable Blocker "
+        android:textSize="20sp" />
+
+</LinearLayout>
