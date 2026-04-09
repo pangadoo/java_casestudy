@@ -45,4 +45,3 @@ FocusStep requires specific high-level permissions to function:
 * `AndroidManifest.xml`: Registration of services and system permissions.
 
 ***
-*Developed as an advanced Android Course Project exploring Hardware-Software integration.*
