@@ -1,6 +1,7 @@
 package com.example.lockin;
 
 import android.accessibilityservice.AccessibilityService;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -12,39 +13,46 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class AppBlockerService extends AccessibilityService {
 
     private LinearLayout blockViewLayout;
     private WindowManager windowManager;
     private boolean isShowingBlockScreen = false;
-
+    private long appOpenTime = 0;
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            if (event.getPackageName() != null) {
-                String openedAppPackage = event.getPackageName().toString();
+            String openedAppPackage = event.getPackageName().toString();
+            SharedPreferences prefs = getSharedPreferences("BlockerPrefs", MODE_PRIVATE);
+            boolean isActive = prefs.getBoolean("is_active", false);
+            String targetApp = prefs.getString("blocked_app", "");
 
-                // Read the invisible notepad
-                SharedPreferences prefs = getSharedPreferences("BlockerPrefs", MODE_PRIVATE);
-                boolean isActive = prefs.getBoolean("is_active", false);
-                String targetApp = prefs.getString("blocked_app", "");
+            if (isActive && openedAppPackage.equals(targetApp)) {
+                long currentBalance = getBalance();
 
-                // Check if the blocker is turned on
-                if (isActive) {
-                    if (openedAppPackage.equals(targetApp)) {
-                        // The banned app was opened! Show the screen.
-                        if (!isShowingBlockScreen) {
-                            showBlockScreen();
-                        }
-                    } else if (!openedAppPackage.equals(getPackageName()) && !openedAppPackage.equals("com.android.systemui")) {
-                        // Only remove the red screen if the user switched to a DIFFERENT, safe app.
-                        removeBlockScreen();
-                    }
+                // 1. If balance is too low (less than 10), BLOCK IMMEDIATELY
+                if (currentBalance < 10) {
+                    showBlockScreen();
                 } else {
-                    // If the switch is off, make sure no screen is showing
-                    removeBlockScreen();
+                    // 2. If they have credits, let them in, but track the time
+                    if (appOpenTime == 0) appOpenTime = System.currentTimeMillis();
+
+                    long timeInAppMillis = System.currentTimeMillis() - appOpenTime;
+                    long tenMinutesInMenu = 10 * 60 * 1000;
+
+                    // 3. For every 10 minutes, deduct 10 credits
+                    if (timeInAppMillis >= tenMinutesInMenu) {
+                        updateBalance(-10);
+                        appOpenTime = System.currentTimeMillis(); // Reset timer for the next 10 mins
+                        Toast.makeText(this, "Usage Tax: -10 Credits", Toast.LENGTH_SHORT).show();
+                    }
                 }
+            } else {
+                // They left the target app
+                appOpenTime = 0;
+                removeBlockScreen();
             }
         }
     }

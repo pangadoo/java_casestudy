@@ -29,6 +29,7 @@
         android:layout_marginBottom="8dp" />
 
     <Spinner
+    android:outlineAmbientShadowColor="@color/black"
     android:id="@+id/spinner_app_selector"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"

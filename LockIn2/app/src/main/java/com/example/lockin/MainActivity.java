@@ -17,13 +17,74 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import androidx.core.content.ContextCompat;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
+
+    private SensorManager sensorManager;
+    private Sensor stepSensor;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // ... existing code ...
+
+        // 1. Request Step Counting Permission at Runtime
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, 101);
+        }
+
+        // 2. Initialize the Sensor
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (stepSensor != null) {
+            sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI);
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
+            float totalSteps = event.values[0];
+
+            SharedPreferences prefs = getSharedPreferences("BlockerPrefs", MODE_PRIVATE);
+            float lastSavedSteps = prefs.getFloat("last_steps", totalSteps);
+
+            // Calculate new steps since the last app open
+            float newSteps = totalSteps - lastSavedSteps;
+
+            if (newSteps >= 50) {
+                // Award 1 credit for every 50 steps
+                int creditsToGain = (int) (newSteps / 50);
+                updateBalance(creditsToGain);
+
+                // Update "last_steps" so we don't award the same steps twice
+                prefs.edit().putFloat("last_steps", totalSteps).apply();
+                Toast.makeText(this, "Steps earned: " + creditsToGain + " credits!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+}
 
 public class MainActivity extends AppCompatActivity {
 
     private Switch blockerSwitch;
     private Spinner appSpinner;
-
-    // We need two lists: One for the readable names (Instagram), one for the secret names (com.instagram...)
     private List<String> appNames = new ArrayList<>();
     private List<String> packageNames = new ArrayList<>();
 
